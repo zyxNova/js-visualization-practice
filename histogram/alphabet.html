@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+  <select name="order" id="mySelect">
+    <option value="Alphabetical">Alphabetical</option>
+    <option value="Frequency-Ascending">Frequency, Ascending</option>
+    <option value="Frequency-Descending">Frequency, Descending</option>
+    </select>
+    <br/>
+</body>
+<script type="module">
+
+  // import {csv} from "https://cdn.skypack.dev/d3-fetch@3"; 
+  import * as d3 from "https://cdn.skypack.dev/d3@7";
+  
+  function barChart(data, {
+  x = (data => data),
+  y = x,
+  xDomain,
+  yDomain, // 数据的定义域
+  marginTop = 30,
+  marginDown = 20,
+  marginLeft = 50,
+  marginRight = 0,
+  width = 1080,
+  height = 560,
+  xRange = [marginLeft, width - marginRight],
+  yRange = [marginTop, height - marginDown], // x和y轴画框范围
+  xPadding = 0.1, // padding/bandwidth的比例，不是像素绝对大小
+  xScale,
+  yScale
+} = {}) {
+  // 由原始数据获得x和y数据
+  let X = d3.map(data, x);
+  let Y = d3.map(data, y);
+  // 获得x和y轴的定义域
+  yDomain = [0, d3.max(Y)];
+  xDomain = X;
+  console.log(xDomain);
+
+  // 获得数据定义域与画布尺寸的比例尺
+  xScale = d3.scaleBand().domain(xDomain).range(xRange).padding(xPadding);
+  yScale = d3.scaleLinear().domain(yDomain).range(yRange);
+
+  // 创建svg根元素
+  // svg不显示两个原因： 1. 没有设置svg长宽； 2. 没有开服务器
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width",width);
+  svg.setAttribute("height",height); // 忘记设置svg的属性了
+  document.body.appendChild(svg);
+
+  // 绘制x坐标轴
+  const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(xAxis);
+  xAxis.setAttribute("style", "stroke:black;stroke-width:1");
+  const xLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  xAxis.appendChild(xLine);
+  xLine.setAttribute("d",`M ${xRange[0]} ${yRange[1]} h ${xRange[1]-xRange[0]}`);
+  // 绘制x轴tick
+  console.log(xScale.step());
+  console.log(xScale.bandwidth());
+  for (let i=0;i<xDomain.length;i++) {
+    const xDash = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    xAxis.appendChild(xDash);
+    let xPosition = marginLeft + (i+1)*xScale.step() - xScale.bandwidth()/2;
+    xDash.setAttribute("d", `M ${xPosition} ${yRange[1]} v 5`);
+    drawText(xDomain[i], xPosition, yRange[1]+17, xAxis);
+  }
+
+  // 绘制y坐标轴
+  const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(yAxis);
+  yAxis.setAttribute("style", "stroke:black;stroke-width:1");
+  // const yLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  // yAxis.appendChild(yLine);
+  // yLine.setAttribute("d",`M ${xRange[0]} ${yRange[0]} v ${yRange[1]-yRange[0]}`);
+  // 绘制y轴tick和grid
+  let yCnt = 10;
+  let yStep = Math.ceil((yRange[1] - yRange[0])/yCnt);
+  for (let i=0;i<yCnt;i++) {
+    const yDash = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    yAxis.appendChild(yDash);
+    let yPosition = yRange[1] - i*yStep;
+    yDash.setAttribute("d", `M ${marginLeft-5} ${yPosition} h 5`);
+    drawText(Math.abs(Number((d3.scaleLinear().domain(yRange).range(yDomain)(marginDown+i*yStep)))).toFixed(2), marginLeft-19, yPosition+3, yAxis);
+    const yGrid = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    yAxis.appendChild(yGrid);
+    yGrid.setAttribute("d", `M ${marginLeft} ${yPosition} H ${xRange[1]}`);
+    yGrid.setAttribute("style", "stroke:#cccccc;stroke-width:1;opacity:0.5");
+  }
+
+  // 初始化矩形
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(g);
+  g.setAttribute("style", "fill:steelblue;fill-opacity:0.9");
+  for (let i = 0; i < xDomain.length; i++) {
+    let dy = yScale(Y[i]) - yScale(0);
+    drawRect(marginLeft+xScale.padding()*xScale.step()+i*xScale.step(), yRange[1]-dy, xScale.bandwidth(), dy, g);
+    console.log(xScale.padding());
+  }
+
+  function drawText(text, x, y, g) {
+    let tick = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    g.appendChild(tick);
+    tick.textContent = text; // 没有添加文字内容
+    tick.setAttribute("x", x);
+    tick.setAttribute("y", y);
+    tick.setAttribute("text-anchor", "middle");
+    tick.setAttribute("font-size", 12);
+    tick.setAttribute("font-family", "san-serif");
+  }
+
+  function drawRect(x, y, width, height, g) {
+    let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    g.appendChild(rect);
+    rect.setAttribute("x",x);
+    rect.setAttribute("y",y);
+    rect.setAttribute("width",width);
+    rect.setAttribute("height",height);
+  }
+}
+  d3.csv("alphabet.csv").then((data) => {
+    console.log(data); // [{"Hello": "world"}, …]
+    barChart(data, {
+      x: d => d.letter,
+      y: d => d.frequency
+    });
+  });
+  
+</script>
+</html>

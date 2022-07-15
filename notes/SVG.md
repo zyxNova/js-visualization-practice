@@ -527,3 +527,43 @@ Where `style.css` looks something like:
 - colorized with the `fill` attribute and given a stroke with the `stroke` attribute. 
 
 `font-family`, `font-style`, `font-weight`, `font-variant`, `font-stretch`, `font-size`, `font-size-adjust`, `kerning`, `letter-spacing`, `word-spacing` and `text-decoration`.
+
+
+
+## Transform
+
+### `translate()`
+
+<svg width="40" height="50" style="background-color:#bff;">
+    <rect x="0" y="0" width="10" height="10" transform="translate(30,40)" />
+</svg>
+
+```html
+<svg width="40" height="50" style="background-color:#bff;">
+    <rect x="0" y="0" width="10" height="10" transform="translate(30,40)" />
+</svg>
+```
+
+The example will render a rectangle, translated to the point (30,40) instead of (0,0).
+
+If the second value is not given, it is assumed to be *0*.
+
+
+
+### `rotate()`
+
+<svg width="31" height="31">
+    <rect x="12" y="-10" width="20" height="20" transform="rotate(45)" />
+</svg>
+
+```html
+<svg width="31" height="31">
+    <rect x="12" y="-10" width="20" height="20" transform="rotate(45)" />
+</svg>
+```
+
+
+
+### `scale()`
+
+`scale()` changes the size of an element. It takes two numbers, the first being the *x* scale factor and the second being the *y* scale factor. The factors are taken as the ratio of the transformed dimension to the original. For example, *0.5 shrinks by 50%. If the second number is omitted, it is assumed to be equal to the first.*
