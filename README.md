@@ -30,7 +30,7 @@
 
 这周主要在看理论知识，代码练习不多。只完成了简易的直方图(histogram)
 
-<img src="histogram/histogram.png" alt="histogram" style="zoom:40%;" />
+<img src="histogram/bin/histogram.png" alt="histogram" style="zoom:40%;" />
 
 - 生成均匀分布的样本数据以供测试
 - 处理数据：data -> 8组bins（在写之前参考了d3-array-bin的源码）
@@ -51,8 +51,51 @@
 
 
 
-## 7.10-7.16学习记录
+## 7.10-7.22学习记录
 
-7.14
+### 理论知识
+
+- 动画，包括js绘制和css transition
+- svg`<path>`元素的arc
+- d3-chord等库，要用到就看api
+
+### 代码练习
+
+完成了两个图。
+
+<img src="histogram/alphabet/alphabet.png" alt="alphabet" style="zoom:50%;" />
+
+https://observablehq.com/@d3/bar-chart-transitions
+
+重绘了静态的直方图，因为第一个bin太粗糙了，练习了`d3-scale`等api。
+
+对bar chart transition动画没什么头绪。
+
+- 首先用字母序绘制bar以后，如何在不提交表单的情况下获得下拉列表的变化？`option.addEventListener()`？
+- 在变换前和后要知道letter对应的index变化，从而将rect transform。用什么样的数据结构可以记录变换前后的index？
+
+
+
+<img src="chord/chord.png" alt="chord" style="zoom:50%;" />
+
+没加刻度线
+
+<img src="chord/chord2.jpg" alt="chord2" style="zoom:50%;" />
+
+https://observablehq.com/@d3/chord-diagram
+
+
+
+### 问题
 
 - 如何在外部js文件中引入d3库？`import`语句必须在`<script type="module">`中使用，单独的js文件会报错
+- 换不了字体
+
+- ~~打断点调试无效？~~已解决。因为在本地文件打断点，实际上type="module"后打开的是服务器端的html文件。
+
+
+
+### 总结
+
+- 再练习动画交互
+- 学习`<canvas>`

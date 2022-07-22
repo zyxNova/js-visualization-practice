@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+</body>
+<script type="module">
+
+  import * as d3 from "https://cdn.skypack.dev/d3@7";
+  
+  const width = 960,
+        height = 960,
+        svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  document.body.appendChild(svg);
+  svg.setAttribute("width",width);
+  svg.setAttribute("height",height);
+  // 将坐标原点从左上角调整至屏幕中央，和数学坐标轴相似
+  svg.setAttribute("viewBox",`${-width/2} ${-height/2} ${width} ${height}`);
+
+  // raw data
+  // const matrix = [
+  //   [11975,  5871, 8916, 2868],
+  //   [ 1951, 10048, 2060, 6171],
+  //   [ 8010, 16145, 8090, 8045],
+  //   [ 1013,   990,  940, 6907]
+  // ],
+  // color = ["#F26223", "#FFDD89", "#957244", "#000000"];
+  
+  const data = Object.assign([
+  [.096899, .008859, .000554, .004430, .025471, .024363, .005537, .025471],
+  [.001107, .018272, .000000, .004983, .011074, .010520, .002215, .004983],
+  [.000554, .002769, .002215, .002215, .003876, .008306, .000554, .003322],
+  [.000554, .001107, .000554, .012182, .011628, .006645, .004983, .010520],
+  [.002215, .004430, .000000, .002769, .104097, .012182, .004983, .028239],
+  [.011628, .026024, .000000, .013843, .087486, .168328, .017165, .055925],
+  [.000554, .004983, .000000, .003322, .004430, .008859, .017719, .004430],
+  [.002215, .007198, .000000, .003322, .016611, .014950, .001107, .054264]
+], {
+  names: ["Apple", "HTC", "Huawei", "LG", "Nokia", "Samsung", "Sony", "Other"],
+  colors: ["#c4c4c4", "#69b40f", "#ec1d25", "#c8125c", "#008fc8", "#10218b", "#134b24", "#737373"]
+})
+
+  chordDiagram(data, {
+    color : data.colors
+  });
+
+  function chordDiagram(matrix, {
+    n = matrix.length,
+    groupSum = new Array(n), // 每一组的流量和
+    group = new Array(n), // index, startAngle, endAngle, value
+    sum = 0, // matrix的流量总和
+    dv = 0, // rad/value
+    padAngle = 0.03, // 每组之间的空隙，单位rad
+    outerRadius = 320,
+    innerRadius = 310,
+    color
+  } = {}) {
+
+    const pi = Math.PI,
+          tau = 2*pi,
+          sin = Math.sin,
+          cos = Math.cos;
+          
+    // const svg = document.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg"); 不能使用svg.appendChild
+    const svg = document.querySelector("svg");
+    // 计算每一行的流量，以及整个矩阵的总流量
+    for (let i = 0; i < n; i++) {
+      groupSum[i] = d3.sum(matrix[i]);
+      sum += groupSum[i];
+    }
+    // 计算单位value对应的rad
+    dv = tau / sum;
+
+    // 计算每一个group的index, startAngle, endAngle, value，以便画出外层的圆环
+    const arc = document.createElementNS("http://www.w3.org/2000/svg","g");
+    svg.appendChild(arc);
+    arc.setAttribute("stroke-width", 2);
+    let x = 0;
+    for (let i = 0; i < n; i++) {
+      let dTheta = groupSum[i]*dv;
+      group[i] = {
+        index : i,
+        startAngle : x+padAngle,
+        endAngle : x+dTheta,
+        value: groupSum[i]
+      };
+      let context = d3.path();
+      context.arc(0,0,innerRadius,group[i].startAngle,group[i].endAngle);
+      context.lineTo(outerRadius*cos(group[i].endAngle), outerRadius*sin(group[i].endAngle));
+      context.arc(0,0,outerRadius,group[i].endAngle,group[i].startAngle,true); // 这里的第五个参数顺逆时针比较坑
+      context.lineTo(innerRadius*cos(group[i].startAngle), innerRadius*sin(group[i].startAngle));
+      context.closePath();
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      arc.appendChild(circle);
+      circle.setAttribute("d", context.toString());
+      circle.setAttribute("fill", color[i]);
+      circle.setAttribute("stroke", color[i]);
+      x += dTheta;
+    }
+
+    // 根据matrix[i][j]画出path
+    // matrix[i][i]: arc, bezierCurve
+    // matrix[i][j]: arc, bezier, arc, bezier
+    const ribbon = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    svg.appendChild(ribbon);
+    ribbon.setAttribute("fill-opacity", 0.8);
+    // ribbon.setAttribute("stroke-width",1);
+    let angleCount = new Array(n);
+    for (let i = 0; i < n; i++) {
+      angleCount[i] = angleCount[i] || group[i].startAngle;
+      for (let j = 0; j <= i; j++) {
+        if (matrix[i][j] === undefined) continue;
+        angleCount[j] = angleCount[j] || group[j].startAngle;
+        // 在[i][j]和[j][i]中获取较大的流量
+        let maxFlow = d3.max([matrix[i][j], matrix[j][i] || 0]),
+            colorIndex = maxFlow === Number(matrix[i][j]) ? i : j, 
+            srcRad = matrix[i][j] / group[i].value * (group[i].endAngle - group[i].startAngle),
+            sa = [angleCount[i], angleCount[i] + srcRad],
+            tgtRad,
+            ta,
+            context = d3.path();
+        
+        angleCount[i] += srcRad;
+        // 获得path轨迹
+        context.arc(0,0,innerRadius,sa[0],sa[1]);
+        if (i === j) {
+          context.quadraticCurveTo(0, 0, innerRadius*cos(sa[0]), innerRadius*sin(sa[0]));
+        }
+        else {
+          //注意这里是matrix[j][i]而不是maxFlow
+          tgtRad = matrix[j][i] / group[j].value * (group[j].endAngle - group[j].startAngle);
+          ta = [angleCount[j], angleCount[j] + tgtRad];
+          angleCount[j] += tgtRad;
+          context.quadraticCurveTo(0, 0, innerRadius*cos(ta[0]), innerRadius*sin(ta[0]));
+          context.arc(0,0,innerRadius,ta[0],ta[1]);
+          context.quadraticCurveTo(0, 0, innerRadius*cos(sa[0]), innerRadius*sin(sa[0]));
+        }
+        context.closePath();
+        
+        // 添加path元素，绘制ribbon
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        ribbon.appendChild(path);
+        path.setAttribute("d",context.toString());
+        path.setAttribute("fill",color[colorIndex]);
+        // path.setAttribute("stroke",color[colorIndex]);
+      }
+    }
+  }
+</script>
+</html>
