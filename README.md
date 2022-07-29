@@ -110,12 +110,14 @@ https://observablehq.com/@d3/chord-diagram
 
 - `tickGroup.setAttribute("stroke", "black"); *// 少了这句话画不了path*`
 
-- `setAttribute("fill",xxx)`和`target.style.fill`是两个东西   
+- `setAttribute("fill",xxx)`和`target.style.fill`是两个不同维度的东西，有时还能互相覆盖
+
+- `<text>`使用`style.transition`没有动画，但是`<rect>`和`<path>`可以。。
 
   
 
-### 理论知识
+### 练习
 
-- 动画，包括js绘制和css transition
-- svg`<path>`元素的arc
-- d3-chord等库，要用到就看api
+- add chord diagram axis
+- add highlight&dark
+- add `select` element sorting

@@ -7,18 +7,15 @@
     <title>Document</title>
 </head>
 <body>
-  <select name="order" id="mySelect">
-    <option value="Alphabetical">Alphabetical</option>
-    <option value="Frequency-Ascending">Frequency, Ascending</option>
-    <option value="Frequency-Descending">Frequency, Descending</option>
+  <select name="order" id="mySelect" onchange="change()">
+    <option value="0" label="Alphabetical"selected>Alphabetical</option>
+    <option value="1" label="Frequency, ascending">Frequency, Ascending</option>
+    <option value="2" label="Frequency, descending">Frequency, Descending</option>
     </select>
     <br/>
 </body>
-<script type="module">
-
-  // import {csv} from "https://cdn.skypack.dev/d3-fetch@3"; 
-  import * as d3 from "https://cdn.skypack.dev/d3@7";
-  
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
   function barChart(data, {
   x = (data => data),
   y = x,
@@ -34,7 +31,8 @@
   yRange = [marginTop, height - marginDown], // x和y轴画框范围
   xPadding = 0.1, // padding/bandwidth的比例，不是像素绝对大小
   xScale,
-  yScale
+  yScale,
+  yFormat = d3.format(".0~%")
 } = {}) {
   // 由原始数据获得x和y数据
   let X = d3.map(data, x);
@@ -42,7 +40,6 @@
   // 获得x和y轴的定义域
   yDomain = [0, d3.max(Y)];
   xDomain = X;
-  console.log(xDomain);
 
   // 获得数据定义域与画布尺寸的比例尺
   xScale = d3.scaleBand().domain(xDomain).range(xRange).padding(xPadding);
@@ -63,14 +60,13 @@
   xAxis.appendChild(xLine);
   xLine.setAttribute("d",`M ${xRange[0]} ${yRange[1]} h ${xRange[1]-xRange[0]}`);
   // 绘制x轴tick
-  console.log(xScale.step());
-  console.log(xScale.bandwidth());
   for (let i=0;i<xDomain.length;i++) {
     const xDash = document.createElementNS("http://www.w3.org/2000/svg", "path");
     xAxis.appendChild(xDash);
     let xPosition = marginLeft + (i+1)*xScale.step() - xScale.bandwidth()/2;
     xDash.setAttribute("d", `M ${xPosition} ${yRange[1]} v 5`);
-    drawText(xDomain[i], xPosition, yRange[1]+17, xAxis);
+    data[i].xDash = xDash;
+    data[i].xTick = drawText(xDomain[i], xPosition, yRange[1]+17, xAxis);
   }
 
   // 绘制y坐标轴
@@ -88,7 +84,7 @@
     yAxis.appendChild(yDash);
     let yPosition = yRange[1] - i*yStep;
     yDash.setAttribute("d", `M ${marginLeft-5} ${yPosition} h 5`);
-    drawText(Math.abs(Number((d3.scaleLinear().domain(yRange).range(yDomain)(marginDown+i*yStep)))).toFixed(2), marginLeft-19, yPosition+3, yAxis);
+    drawText(yFormat(Math.abs(Number((d3.scaleLinear().domain(yRange).range(yDomain)(marginDown+i*yStep))))), marginLeft-19, yPosition+3, yAxis);
     const yGrid = document.createElementNS("http://www.w3.org/2000/svg", "path");
     yAxis.appendChild(yGrid);
     yGrid.setAttribute("d", `M ${marginLeft} ${yPosition} H ${xRange[1]}`);
@@ -98,11 +94,10 @@
   // 初始化矩形
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
   svg.appendChild(g);
-  g.setAttribute("style", "fill:steelblue;fill-opacity:0.9");
+  g.setAttribute("style", "fill:steelblue;fill-opacity:0.8");
   for (let i = 0; i < xDomain.length; i++) {
     let dy = yScale(Y[i]) - yScale(0);
-    drawRect(marginLeft+xScale.padding()*xScale.step()+i*xScale.step(), yRange[1]-dy, xScale.bandwidth(), dy, g);
-    console.log(xScale.padding());
+    data[i].rect = drawRect(marginLeft+xScale.padding()*xScale.step()+i*xScale.step(), yRange[1]-dy, xScale.bandwidth(), dy, g);
   }
 
   function drawText(text, x, y, g) {
@@ -114,8 +109,8 @@
     tick.setAttribute("text-anchor", "middle");
     tick.setAttribute("font-size", 12);
     tick.style.fontFamily = "sans-serif";
-    tick.style.strokeWidth = 0.5;
-    // tick.setAttribute("font-family", "san-serif");
+    tick.style.strokeWidth = 0.2;
+    return tick;
   }
 
   function drawRect(x, y, width, height, g) {
@@ -125,15 +120,44 @@
     rect.setAttribute("y",y);
     rect.setAttribute("width",width);
     rect.setAttribute("height",height);
+    return rect;
+  }
+
+  return function update(order) {
+    data = d3.sort(data, order);
+    console.log(data);
+    for (let i = 0; i < data.length; i++) {
+      const rect = data[i].rect;
+      const xDash = data[i].xDash;
+      const xTick = data[i].xTick;
+      rect.setAttribute("x",`${marginLeft+xScale.padding()*xScale.step()+i*xScale.step()}`);
+      rect.style.transition = `x 0.8s ease-in-out ${i*10}ms`;
+      let xPosition = marginLeft + (i+1)*xScale.step() - xScale.bandwidth()/2;
+      xDash.setAttribute("d", `M ${xPosition} ${yRange[1]} v 5`);
+      xDash.style.transition = `d 0.8s ease-in-out ${i*10}ms`;
+      xTick.setAttribute("x", xPosition);
+      xTick.style.transition = `x 0.8s ease-in-out ${i*10}ms`; // 不跟着一起动???
+    }
   }
 }
+  let update;
   d3.csv("alphabet.csv").then((data) => {
-    console.log(data); // [{"Hello": "world"}, …]
-    barChart(data, {
+    update = barChart(data, {
       x: d => d.letter,
       y: d => d.frequency
     });
+    // setTimeout(update({order : order[0]}),200);
+    // setTimeout(update({order : order[1]}),2000);
+    // setTimeout(update({order : order[2]}),2000);
+    // setTimeout(update(),200);
   });
-  
+  const order = [(a, b) => d3.ascending(a.letter, b.letter),
+                (a, b) => d3.ascending(a.frequency, b.frequency),
+                (a, b) => d3.descending(a.frequency, b.frequency)];
+  function change() {
+    const select = document.getElementById("mySelect").value;
+    console.log(select);
+    update(order[select]);
+  }
 </script>
 </html>

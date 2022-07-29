@@ -205,7 +205,7 @@
     for (let child of hightlight.children) {
       const color = child.getAttribute("fill");
       child.style.transition = "fill 0.15s ease-out";
-      if (child !== event.target) child.style.fill = d3.rgb(d3.color(color).darker(0.5));
+      if (child !== event.target) child.style.fill = d3.rgb(d3.color(color).darker());
     }
   })
   hightlight.addEventListener("mouseout", (event) => {
