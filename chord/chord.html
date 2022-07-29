@@ -12,8 +12,8 @@
 
   import * as d3 from "https://cdn.skypack.dev/d3@7";
   
-  const width = 960,
-        height = 960,
+  const width = 1080,
+        height = 1080,
         svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
   document.body.appendChild(svg);
   svg.setAttribute("width",width);
@@ -56,8 +56,8 @@
     sum = 0, // matrix的流量总和
     dv = 0, // rad/value
     padAngle = 0.03, // 每组之间的空隙，单位rad
-    outerRadius = 320,
-    innerRadius = 310,
+    outerRadius = 480,
+    innerRadius = 470,
     color,
     names
   } = {}) {
@@ -132,6 +132,7 @@
     const ribbon = document.createElementNS("http://www.w3.org/2000/svg", "g");
     svg.appendChild(ribbon);
     ribbon.setAttribute("fill-opacity", 0.8);
+    ribbon.setAttribute("id", "ribbon");
     // ribbon.setAttribute("stroke-width",1);
     let angleCount = new Array(n);
     for (let i = 0; i < n; i++) {
@@ -171,6 +172,7 @@
         path.setAttribute("d",context.toString());
         path.setAttribute("fill",color[colorIndex]);
         // path.setAttribute("stroke",color[colorIndex]);
+        // path.setAttribute("transition", "fill 1s ease-out"); // 在这里设置没用，必须要在回调函数中设置？
       }
     }
 
@@ -194,6 +196,23 @@
     tick.style.fontFamily = "sans-serif";
     tick.style.strokeWidth = width;
   }
+
+  // 增加鼠标悬停时高亮和减淡
+  const hightlight = document.querySelector("#ribbon");
+  hightlight.addEventListener("mouseover", (event) => {
+    const currentColor = event.target.getAttribute("fill");
+    event.target.style.fill = d3.rgb(d3.color(currentColor).brighter(0.5));
+    for (let child of hightlight.children) {
+      const color = child.getAttribute("fill");
+      child.style.transition = "fill 0.15s ease-out";
+      if (child !== event.target) child.style.fill = d3.rgb(d3.color(color).darker(0.5));
+    }
+  })
+  hightlight.addEventListener("mouseout", (event) => {
+    for (let child of hightlight.children) {
+      child.style.fill = "";
+    }
+  })
   }
 </script>
 </html>

@@ -148,3 +148,6 @@ css:
 ## `EventTarget.addEventListener()`
 
 https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+
+[Element: mouseover](https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseover_event#examples)，例子见chord diagram
+

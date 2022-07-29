@@ -110,6 +110,8 @@ https://observablehq.com/@d3/chord-diagram
 
 - `tickGroup.setAttribute("stroke", "black"); *// 少了这句话画不了path*`
 
+- `setAttribute("fill",xxx)`和`target.style.fill`是两个东西   
+
   
 
 ### 理论知识
