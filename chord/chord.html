@@ -45,7 +45,8 @@
 })
 
   chordDiagram(data, {
-    color : data.colors
+    color : data.colors,
+    names : data.names
   });
 
   function chordDiagram(matrix, {
@@ -57,7 +58,8 @@
     padAngle = 0.03, // 每组之间的空隙，单位rad
     outerRadius = 320,
     innerRadius = 310,
-    color
+    color,
+    names
   } = {}) {
 
     const pi = Math.PI,
@@ -79,6 +81,13 @@
     const arc = document.createElementNS("http://www.w3.org/2000/svg","g");
     svg.appendChild(arc);
     arc.setAttribute("stroke-width", 2);
+    const tickGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    svg.appendChild(tickGroup);
+    tickGroup.setAttribute("stroke-width",1.5);
+    tickGroup.setAttribute("stroke", "black"); // 少了这句话画不了path
+    tickGroup.style.fontFamily = "sans-serif"; // 用setAttribute方法不起作用
+    const tickStep = d3.tickStep(0, sum, 100); // 将sum均分为100份
+
     let x = 0;
     for (let i = 0; i < n; i++) {
       let dTheta = groupSum[i]*dv;
@@ -100,8 +109,23 @@
       circle.setAttribute("fill", color[i]);
       circle.setAttribute("stroke", color[i]);
       x += dTheta;
-    }
 
+      // 画出主tick和name
+      let rotateAngle = group[i].startAngle*360/tau;
+      drawTick(6, rotateAngle, outerRadius, 1, tickGroup);
+      drawText(names[i] + " ↓", rotateAngle, outerRadius+9, 0.5, tickGroup);
+
+      // 画每一个group的分刻度
+      const steps = group[i].value/tickStep;
+      for (let k = 1; k < steps; k++) {
+        let subAngle = rotateAngle+k*tickStep*(group[i].endAngle-group[i].startAngle)/group[i].value*360/tau;
+        // 这里不能*dv,因为paddingAngle存在使得单位value对应的rad减小
+        drawTick(6, subAngle, outerRadius, 1, tickGroup);
+        drawText(k + "%", subAngle, outerRadius+9, 0.2, tickGroup);
+      }
+    }
+    
+  
     // 根据matrix[i][j]画出path
     // matrix[i][i]: arc, bezierCurve
     // matrix[i][j]: arc, bezier, arc, bezier
@@ -149,6 +173,27 @@
         // path.setAttribute("stroke",color[colorIndex]);
       }
     }
+
+    function drawTick(length, rotateAngle, radius, width, g) {
+      const tick = document.createElementNS("http://www.w3.org/2000/svg","path");
+      g.appendChild(tick);
+      tick.setAttribute("d",`M 0 0 h ${length}`);
+      tick.setAttribute("transform", `rotate(${rotateAngle}) translate(${radius} 0)`); // translate到极坐标r = outerRadius, theta = 0处
+      tick.setAttribute("stroke-width", width);
+    }
+    function drawText(text, rotateAngle, radius, width, g) {
+    let tick = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    g.appendChild(tick);
+    tick.textContent = text; // 没有添加文字内容
+    tick.setAttribute("x", radius);
+    tick.setAttribute("y", 0);
+    tick.setAttribute("transform", `rotate(${rotateAngle})`);
+    tick.setAttribute("text-anchor", "start");
+    tick.setAttribute("dominant-baseline", "middle");
+    tick.setAttribute("font-size", 10);
+    tick.style.fontFamily = "sans-serif";
+    tick.style.strokeWidth = width;
+  }
   }
 </script>
 </html>

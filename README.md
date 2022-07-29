@@ -99,3 +99,21 @@ https://observablehq.com/@d3/chord-diagram
 
 - 再练习动画交互
 - 学习`<canvas>`
+
+
+
+## 7.23-7.29学习记录
+
+### 一些坑
+
+- 改变字体，`tickGroup.style.fontFamily = "sans-serif"; *// 用setAttribute方法不起作用*`
+
+- `tickGroup.setAttribute("stroke", "black"); *// 少了这句话画不了path*`
+
+  
+
+### 理论知识
+
+- 动画，包括js绘制和css transition
+- svg`<path>`元素的arc
+- d3-chord等库，要用到就看api

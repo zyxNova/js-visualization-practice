@@ -1,5 +1,9 @@
 # Animation in JavaScript
 
+[TOC]
+
+
+
 ## `requestAnimationFrame`
 
 https://zh.javascript.info/js-animation

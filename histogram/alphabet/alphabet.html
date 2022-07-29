@@ -113,7 +113,9 @@
     tick.setAttribute("y", y);
     tick.setAttribute("text-anchor", "middle");
     tick.setAttribute("font-size", 12);
-    tick.setAttribute("font-family", "san-serif");
+    tick.style.fontFamily = "sans-serif";
+    tick.style.strokeWidth = 0.5;
+    // tick.setAttribute("font-family", "san-serif");
   }
 
   function drawRect(x, y, width, height, g) {
