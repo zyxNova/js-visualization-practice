@@ -198,18 +198,18 @@
   }
 
   // 增加鼠标悬停时高亮和减淡
-  const hightlight = document.querySelector("#ribbon");
-  hightlight.addEventListener("mouseover", (event) => {
+  const highlight = document.querySelector("#ribbon");
+  highlight.addEventListener("mouseover", (event) => {
     const currentColor = event.target.getAttribute("fill");
     event.target.style.fill = d3.rgb(d3.color(currentColor).brighter(0.5));
-    for (let child of hightlight.children) {
+    for (let child of highlight.children) {
       const color = child.getAttribute("fill");
       child.style.transition = "fill 0.15s ease-out";
       if (child !== event.target) child.style.fill = d3.rgb(d3.color(color).darker());
     }
   })
-  hightlight.addEventListener("mouseout", (event) => {
-    for (let child of hightlight.children) {
+  highlight.addEventListener("mouseout", (event) => {
+    for (let child of highlight.children) {
       child.style.fill = "";
     }
   })

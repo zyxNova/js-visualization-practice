@@ -59,7 +59,7 @@ the order of rendering elements. The globally valid rule for SVG files is, that 
 
 The default user coordinate system maps one user pixel to one device pixel.
 
-
+*可以通过设置viewBox属性变更坐标系原点*
 
 ## Basic shapes
 
